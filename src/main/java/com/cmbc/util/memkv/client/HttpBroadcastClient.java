@@ -25,13 +25,14 @@ import org.slf4j.LoggerFactory;
 
 import com.cmbc.util.memkv.common.NamedThreadFactory;
 
-public class HttpBroadcastClient implements MemkvBroadcastClient {
+public class HttpBroadcastClient extends PipeableClient implements MemkvBroadcastClient {
 	
 	final  static Logger logger = LoggerFactory.getLogger(HttpBroadcastClient.class);
 	//private ExecutorService executors = Executors.newFixedThreadPool(10);
 	private ThreadPoolExecutor executors= null;
 	private UrlFetcher urlFetcher;
 	
+
 	public HttpBroadcastClient() {
 		// TODO Auto-generated constructor stub	
 	}
@@ -327,6 +328,13 @@ public class HttpBroadcastClient implements MemkvBroadcastClient {
 
 	@Override
 	public boolean gc(String name) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
+	@Override
+	public boolean commitPipe() {
 		// TODO Auto-generated method stub
 		return false;
 	}

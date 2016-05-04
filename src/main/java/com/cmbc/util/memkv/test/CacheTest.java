@@ -30,7 +30,6 @@ public class CacheTest extends TestCase {
 	 */
 	public static Test suite() {
 		return new TestSuite(CacheTest.class);
-
 	}
 	public void testSet() {
 		MemKV cache = new DefaultMemKV();
@@ -547,7 +546,7 @@ public class CacheTest extends TestCase {
 			Map limit = (Map) limitList.get(i);
 			prod.putAll(limit);
 		}
-		prodList.sort(pc);
+		//prodList.sort(pc);
 	}
 	class prodComparator implements Comparator {
 

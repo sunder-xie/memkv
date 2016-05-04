@@ -16,13 +16,17 @@ import org.apache.curator.framework.recipes.cache.NodeCacheListener;
 import org.apache.curator.retry.RetryNTimes;
 import org.apache.zookeeper.KeeperException.NodeExistsException;
 import org.apache.zookeeper.data.Stat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.cmbc.util.memkv.DefaultMemKV;
 import com.cmbc.util.memkv.MemKV;
 import com.cmbc.util.memkv.MemKVManager;
+import com.cmbc.util.memkv.common.NamedThreadFactory;
 
 public class MemkvZKListener {
 
+	private final static Logger logger = LoggerFactory.getLogger(MemkvZKListener.class);
 	private ExecutorService executors;
 	private String zkIp;
 	private int port;
@@ -36,18 +40,17 @@ public class MemkvZKListener {
 		// TODO Auto-generated constructor stub
 		this.zkIp = zkIp;
 		this.port = port;
-		this.root = root;
-
-		
+		this.root = root;	
 	}
-	public void start() throws Exception {
-		
+	
+	public void start() throws Exception {	
 		String namespace = "";
 		if(root != null && !root.isEmpty()) {
 			namespace = root+"/memkv";
 		} else {
 			namespace = "memkv";
 		}
+		logger.info("start listening on namespace " + namespace);
 		client = CuratorFrameworkFactory.builder()
 				.sessionTimeoutMs(10000)
 				.namespace(namespace)
@@ -55,8 +58,9 @@ public class MemkvZKListener {
 				.connectString(zkIp+":"+port)
 				.build();
 		client.start();
-
-		executors = Executors.newFixedThreadPool(3,new ZkWatcherThreadFactory());	
+		logger.info("zk client started...");
+		
+		executors = Executors.newFixedThreadPool(3,new NamedThreadFactory("memkv-zk-watcher"));	
 		cmdNodeCache = new NodeCache(client, cmdPath, false);
 		cmdNodeCache.start(true);
 		cmdNodeCache.getListenable().addListener(
@@ -65,6 +69,7 @@ public class MemkvZKListener {
                 public void nodeChanged() throws Exception {
                 	String cmd = new String(cmdNodeCache.getCurrentData().getData());   
                 	System.out.println(cmd);
+                	logger.info("memkv zk listener received cmd "+ cmd);
                     String result = process(cmd);
                     
         			Stat stat = client.checkExists().forPath("/node/"+MemkvZKListener.getHostInfo()+"/lastcmd");
@@ -74,8 +79,10 @@ public class MemkvZKListener {
         				} catch(Exception e) {
         					if(e instanceof NodeExistsException) {
         						System.out.println("node created by others");
+        						logger.info("node created by others");
         					}
         					else {
+        						logger.info(e.getMessage());
         						throw e;
         					}
         				}			
@@ -88,7 +95,7 @@ public class MemkvZKListener {
             executors
         );
 		
-		ExecutorService poster = Executors.newSingleThreadExecutor(new ZkWatcherThreadFactory());
+		ExecutorService poster = Executors.newSingleThreadExecutor(new NamedThreadFactory("memkv-status-poster"));
 		poster.execute(new Poster(client));
 		
 	}
@@ -312,18 +319,6 @@ class Poster implements Runnable {
 			}
 			
 		}
-	}
-	
-}
-class ZkWatcherThreadFactory implements ThreadFactory {
-
-	private static AtomicInteger index = new AtomicInteger(0);
-	
-	@Override
-	public Thread newThread(Runnable r) {
-		// TODO Auto-generated method stub
-		Thread thread = new Thread(r, "memkv-zk-watcher-"+index.getAndIncrement());
-		return thread;
 	}
 	
 }

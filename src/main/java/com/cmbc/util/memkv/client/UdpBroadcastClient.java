@@ -10,7 +10,7 @@ import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UdpBroadcastClient implements MemkvBroadcastClient {
+public class UdpBroadcastClient extends PipeableClient implements MemkvBroadcastClient {
 
 	final private static Logger logger = LoggerFactory.getLogger(UdpBroadcastClient.class);
 	
@@ -59,10 +59,12 @@ public class UdpBroadcastClient implements MemkvBroadcastClient {
 			logger.error(e.getMessage(), e);
 			return false;
 		} finally {
+			ds.disconnect();
 			ds.close();
 		}
 		return true;
 	}
+	
 	@Override
 	public boolean invalid(String name, String key) {
 		return sendMsg(name+"&invalid&"+key);
@@ -89,6 +91,14 @@ public class UdpBroadcastClient implements MemkvBroadcastClient {
 	public boolean gc(String name) {
 		// TODO Auto-generated method stub
 		return false;
+	}
+	@Override
+	public boolean commitPipe() {
+		if(!inPipe()) {
+			throw new RuntimeException("not in pipe");
+		}
+		return false;
+		
 	}
 
 }

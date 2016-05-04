@@ -45,6 +45,7 @@ public class TestOffheap extends TestCase{
 		Thread.currentThread().sleep(6000);
 		v = (String) memkv.offheap_get("1");
 		System.out.println(v);
+		
 	}
 	
 	public void testMultiThread() {

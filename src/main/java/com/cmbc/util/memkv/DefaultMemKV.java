@@ -31,13 +31,19 @@ public class DefaultMemKV implements MemKV {
 	
 	static private long GC_PERIOD = 1800; //回收线程启动间隔
 	final private ConcurrentHashMap<String,Object> cacheMap = new ConcurrentHashMap<String,Object>(1000);	
-	private String cacheDumpDir = "."; //cacheDump默认存放目录
+	private String cacheDumpDir = "/var/tmp/"; //cacheDump默认存放目录
 	private String name;
+	ScheduledExecutorService executor;
+	public void destroy() {
+		if(executor != null) {
+			executor.shutdown();
+		}
+	}
 	public DefaultMemKV() {
 		name = "randomName"+System.nanoTime();
 		MemKVManager.getInstance().register(name, this);
 		serializeUtil = new DefaultSerializeUtil(); //如果不指定序列化工具，使用默认的Java序列化工具
-		ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
+		executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
 		GC_Thread gcThread = new GC_Thread(this);
 		executor.scheduleWithFixedDelay(gcThread, GC_PERIOD, GC_PERIOD, TimeUnit.SECONDS);	
 	}
@@ -52,7 +58,7 @@ public class DefaultMemKV implements MemKV {
 		this.name = name;
 		MemKVManager.getInstance().register(name, this);
 		if(enableGC) {
-			ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
+			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
 			GC_Thread gcThread = new GC_Thread(this);
 			executor.scheduleWithFixedDelay(gcThread, GC_PERIOD, GC_PERIOD, TimeUnit.SECONDS);	
 		}
@@ -62,7 +68,7 @@ public class DefaultMemKV implements MemKV {
 		this.name = name;
 		MemKVManager.getInstance().register(name, this);
 		if(enableGC) {
-			ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
+			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
 			GC_Thread gcThread = new GC_Thread(this);
 			executor.scheduleWithFixedDelay(gcThread, gc_period, gc_period, TimeUnit.SECONDS);	
 		}
@@ -284,7 +290,12 @@ public class DefaultMemKV implements MemKV {
 	
 	@Override
 	public String cacheDump() {
-		File dumpFile = new File(cacheDumpDir+"/"+"memkvDump"+System.currentTimeMillis());
+		String tmpDir = cacheDumpDir;
+		File dir = new File(cacheDumpDir);
+		if( ! (dir.exists() && dir.isDirectory())) {
+			tmpDir = ".";
+		}
+		File dumpFile = new File(tmpDir+"/"+"memkvDump"+System.currentTimeMillis());
 		BufferedWriter bw = null;
 		try {
 			bw = new BufferedWriter(new FileWriter(dumpFile));
@@ -443,12 +454,12 @@ public class DefaultMemKV implements MemKV {
 		@Override
 		public void run() {
 			// TODO Auto-generated method stub
-			System.out.println((new Timestamp(System.currentTimeMillis()).toString() + " gc start..(size="+memkv.cacheMap.size()));
+			System.out.println((new Timestamp(System.currentTimeMillis()).toString() + " gc start..(size="+memkv.cacheMap.size())+")");
 			if(cacheMap.size() > 0) {
 				memkv.removeExpiredObject(memkv.cacheMap);
 			}
 			//memkv.CacheDump();
-			System.out.println((new Timestamp(System.currentTimeMillis()).toString() + " gc end..(size="+memkv.cacheMap.size()));
+			System.out.println((new Timestamp(System.currentTimeMillis()).toString() + " gc end..(size="+memkv.cacheMap.size())+")");
 		}		
 	}
 

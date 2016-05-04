@@ -23,7 +23,7 @@ import com.cmbc.util.memkv.common.NamedThreadFactory;
 
 public class MemkvUdpListener {
 
-	private int port;
+	private int port =8888;
 	private DatagramSocket socket;
 	private ThreadPoolExecutor handlers;
 	private ExecutorService server;
@@ -31,8 +31,13 @@ public class MemkvUdpListener {
 	private int maxThreads = 100;
 	private int liveTime = 10;
 	private int queueLength = 100;
-	private boolean replyEnabled = true;
+	private boolean replyEnabled = false;
 	static Logger logger = LoggerFactory.getLogger(MemkvUdpListener.class);
+	
+	public MemkvUdpListener(int port) {
+		// TODO Auto-generated constructor stub
+		this.port = port;
+	}
 	public void init() {
 		if(handlers == null) {
 			handlers = new ThreadPoolExecutor(coreThreads, maxThreads, liveTime, TimeUnit.SECONDS,
@@ -49,15 +54,17 @@ public class MemkvUdpListener {
 		server.execute(new Server(socket, handlers));
 	}
 	public void destroy() {
-		if(server != null) {
-			server.shutdown();
+		if(socket != null) {
+			socket.close();
 		}
 		if(handlers != null) {
 			handlers.shutdown();
 		}
-		if(socket != null) {
-			socket.close();
+		if(server != null) {
+			server.shutdown();
 		}
+
+
 	}
 	
 	/**
@@ -150,6 +157,8 @@ class Server implements Runnable {
 			byte[] data = Arrays.copyOfRange(recvPacket.getData(), 0, recvPacket.getLength());
 			InetAddress addr = recvPacket.getAddress();
 			int port = recvPacket.getPort();
+			logger.info(addr+":"+port+":"+new String(data));
+			System.out.println(addr+":"+port+":"+new String(data));
 			handlers.execute(new UdpRequestHandler(addr, port, data, true));
 			//new Thread(new UdpRequestHandler(addr, port, data, true) ).start();
 		}
@@ -173,27 +182,5 @@ class UdpRequestHandler implements Runnable {
 		String result = MemkvUdpListener.process(cmd);
 		String[] rets = result.split(":");
 		String retMsg =  "{\"result\":\"" + rets[0] + "\",\"msg\":\"" + rets[1] + "\"}";
-		if(reply) {
-			DatagramSocket ds = null;
-			DatagramPacket packet = null;
-			try {
-				ds = new DatagramSocket(port, addr);
-				packet = new DatagramPacket(retMsg.getBytes(), retMsg.getBytes().length);
-				ds.send(packet);
-			} catch (SocketException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			finally {
-				if(ds != null) {
-					ds.close();
-				}
-			}
-			
-		}
 	}
 }

@@ -39,7 +39,12 @@ public class MemKVManager {
 			logger.error(e.getMessage());
 		}   
         // 创建MBean   
-        MemkvMonitor mbean = new MemkvMonitor();          
+        MemkvMonitor mbean = null;
+        try {
+        	mbean = new MemkvMonitor();          
+        } catch(Exception e) {
+        	logger.error(e.getMessage());
+        }
         // 在MBeanServer里注册MBean, 标识为ObjectName(com.tenpay.jmx:type=Echo)   
         try {
 			mbs.registerMBean(mbean, name);
