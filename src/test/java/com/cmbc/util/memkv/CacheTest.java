@@ -15,10 +15,22 @@
 //import com.cmbc.util.memkv.serialize.SerializeUtil;
 //
 //import junit.framework.Assert;
+//import junit.framework.Test;
+//import junit.framework.TestCase;
+//import junit.framework.TestSuite;
 //
-//public class CacheTest {
+//public class CacheTest extends TestCase {
 //
+//	public CacheTest(String testName) {
+//		super(testName);
+//	}
 //
+//	/**
+//	 * @return the suite of tests being tested
+//	 */
+//	public static Test suite() {
+//		return new TestSuite(CacheTest.class);
+//	}
 //	public void testSet() {
 //		MemKV cache = new DefaultMemKV();
 //		Map x = new HashMap();
@@ -28,25 +40,17 @@
 //		x.put("hight", 188);
 //		x.put("weight", 130);
 //		x.put("phone", "110");
+//		x.put("jfjdkdkdjf", "jfksfjsfjsalfjskfjskfjskfjskflaskjgiwoefjsakfjskhgksjfslfjsdkfjsoeifjiwefj");
+//		x.put("ksjfksjoegskfjslkfjksfjsafjlskdfjlsjfslajfldkf", "jfslfksdfjewohgskfjakfjsjaflejiofjskfjaldfjalfjslfjalgoerejgoreifjowfjlsfjslfsklfjighslf");
 //		cache.set("niuxinli", x, 5);
-//		Map y = (Map) cache.get("niuxinli");
-//		BigDecimal salary = (BigDecimal) y.get("salary");
-//		Assert.assertTrue(salary.compareTo(new BigDecimal("10000000.00")) == 0);
-//		try {
-//			Thread.currentThread().sleep(6000);
-//		} catch (InterruptedException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
+//
+//		long start = System.currentTimeMillis();
+//		for(int i = 0; i < 10000;i++) {
+//			cache.set(String.valueOf(i/100), x, 10);
+//			Map y = (Map) cache.get(String.valueOf(i/100));
 //		}
-//		y = (Map)cache.get("niuxinli");
-//		Assert.assertEquals(true, y == null);
-//		cache.set("niuxinli", x, -1);
-//		y = (Map) cache.get("niuxinli");
-//		salary = (BigDecimal) y.get("salary");
-//		Assert.assertTrue(salary.compareTo(new BigDecimal("10000000.00")) == 0);
-//		cache.remove("niuxinli");
-//		y = (Map) cache.get("niuxinli");
-//		Assert.assertTrue(y==null);
+//		long end = System.currentTimeMillis();
+//		System.out.println(end-start);
 //	}
 //	
 //	public void testSetIfAbsent() {
@@ -268,7 +272,7 @@
 //							x.put("weight", 130);
 //							x.put("phone", "110");
 //							x.put("index", i);
-//							cache.setIfAbsent(String.valueOf(i), x, 10);
+//							cache.set(String.valueOf(i), x, 10);
 //						}
 //					}else {
 //						for (int i = 999; i >= 0; i--) {
@@ -280,7 +284,7 @@
 //							x.put("weight", 130);
 //							x.put("phone", "110");
 //							x.put("index", i);
-//							cache.setIfAbsent(String.valueOf(i), x, 10);
+//							cache.set(String.valueOf(i), x, 10);
 //						}
 //					}
 //				}
@@ -542,7 +546,7 @@
 //			Map limit = (Map) limitList.get(i);
 //			prod.putAll(limit);
 //		}
-//		prodList.sort(pc);
+//		//prodList.sort(pc);
 //	}
 //	class prodComparator implements Comparator {
 //

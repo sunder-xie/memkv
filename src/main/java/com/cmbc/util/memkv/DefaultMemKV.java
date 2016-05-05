@@ -43,7 +43,7 @@ public class DefaultMemKV implements MemKV {
 		name = "randomName"+System.nanoTime();
 		MemKVManager.getInstance().register(name, this);
 		serializeUtil = new DefaultSerializeUtil(); //如果不指定序列化工具，使用默认的Java序列化工具
-		executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
+		executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread",true));
 		GC_Thread gcThread = new GC_Thread(this);
 		executor.scheduleWithFixedDelay(gcThread, GC_PERIOD, GC_PERIOD, TimeUnit.SECONDS);	
 	}
@@ -58,7 +58,7 @@ public class DefaultMemKV implements MemKV {
 		this.name = name;
 		MemKVManager.getInstance().register(name, this);
 		if(enableGC) {
-			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
+			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread",true));
 			GC_Thread gcThread = new GC_Thread(this);
 			executor.scheduleWithFixedDelay(gcThread, GC_PERIOD, GC_PERIOD, TimeUnit.SECONDS);	
 		}
@@ -68,7 +68,7 @@ public class DefaultMemKV implements MemKV {
 		this.name = name;
 		MemKVManager.getInstance().register(name, this);
 		if(enableGC) {
-			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
+			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread",true));
 			GC_Thread gcThread = new GC_Thread(this);
 			executor.scheduleWithFixedDelay(gcThread, gc_period, gc_period, TimeUnit.SECONDS);	
 		}

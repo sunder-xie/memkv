@@ -18,7 +18,7 @@ public class MemKVManagerTest extends TestCase {
 	}
 	
 	public void test() {
-		MemKV memkv = new DefaultMemKV("memkv");
+		MemKV memkv = new DefaultMemKV("memkv",true);
 		MemKV fuck = MemKVManager.getInstance().getMemKV("memkv");
 		fuck.set("1", "2", 3);
 	}

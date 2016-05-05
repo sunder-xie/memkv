@@ -10,7 +10,7 @@ public class Demo2 {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		MemKV memkv1 = new DefaultMemKV("memkv1");
+		MemKV memkv1 = new DefaultMemKV("memkv1",true);
 		MemKV memkv2 = new DefaultMemKV("memkv2");
 		
 		MemKV memkv = MemKVManager.getInstance().getMemKV("memkv1");
