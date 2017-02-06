@@ -219,5 +219,21 @@ public class RedisMemKV implements MemKV {
 		this.name = name;
 	}
 
+	@Override
+	public boolean containsKey(String key) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public boolean hcontainsKey(String key) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public boolean hcontainsKey(String key, String hkey) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
 }
 

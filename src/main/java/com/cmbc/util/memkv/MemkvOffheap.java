@@ -669,5 +669,24 @@ public class MemkvOffheap implements MemKV {
 	private native boolean offheap_hremove_native(byte[] key);
 
 
+	@Override
+	public boolean containsKey(String key) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean hcontainsKey(String key) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public boolean hcontainsKey(String key, String hkey) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+
 	
 }

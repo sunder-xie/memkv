@@ -242,7 +242,7 @@ public class HttpBroadcastClient extends PipeableClient implements MemkvBroadcas
 		// TODO Auto-generated method stub
 		Map req = new HashMap();
 		req.put("name", name);
-		req.put("cmd", "hInvalid");
+		req.put("cmd", "hinvalid");
 		req.put("key", key);
 		return broadCastNtimes(req, 3);
 	}
@@ -252,7 +252,7 @@ public class HttpBroadcastClient extends PipeableClient implements MemkvBroadcas
 		// TODO Auto-generated method stub
 		Map req = new HashMap();
 		req.put("name", name);
-		req.put("cmd", "hInvalid");
+		req.put("cmd", "hinvalid");
 		req.put("key", key);
 		req.put("hkey",hkey);
 		return broadCastNtimes(req, 3);

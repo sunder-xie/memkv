@@ -58,7 +58,7 @@ public class DefaultMemKV implements MemKV {
 		this.name = name;
 		MemKVManager.getInstance().register(name, this);
 		if(enableGC) {
-			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread",true));
+			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
 			GC_Thread gcThread = new GC_Thread(this);
 			executor.scheduleWithFixedDelay(gcThread, GC_PERIOD, GC_PERIOD, TimeUnit.SECONDS);	
 		}
@@ -68,7 +68,7 @@ public class DefaultMemKV implements MemKV {
 		this.name = name;
 		MemKVManager.getInstance().register(name, this);
 		if(enableGC) {
-			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread",true));
+			executor = Executors.newSingleThreadScheduledExecutor(new NamedThreadFactory("memkv-gc-thread"));
 			GC_Thread gcThread = new GC_Thread(this);
 			executor.scheduleWithFixedDelay(gcThread, gc_period, gc_period, TimeUnit.SECONDS);	
 		}
@@ -319,6 +319,7 @@ public class DefaultMemKV implements MemKV {
 					} else {
 						sb.append("0");
 					}
+					sb.append(":");
 					sb.append("\n");
 					bw.write(sb.toString());
 					sb.setLength(0);				
@@ -473,12 +474,14 @@ public class DefaultMemKV implements MemKV {
 	private void removeExpiredObject(ConcurrentHashMap cacheMap) {
 		logger.info("DefaultMemKV of name "+ getName() + " start gc...");
 		long start = System.currentTimeMillis();
+		try {
+		
 		for(Object key : cacheMap.keySet()) {
 			Object value = cacheMap.get(key);
 			if(value instanceof CacheObject) {
 				long expireTime = ((CacheObject) value).getExpireTime();
-				if(expireTime != -1 && expireTime < System.currentTimeMillis()) {
-					logger.info("DefaultMemKV of name "+ getName() + " gc: remove key " + key);;
+				if(expireTime != -1 && (expireTime + 500) < System.currentTimeMillis()) {
+					//logger.info("DefaultMemKV of name "+ getName() + " gc: remove key " + key);;
 					cacheMap.remove(key);
 				}
 			} else if(value instanceof ConcurrentHashMap) {
@@ -486,9 +489,9 @@ public class DefaultMemKV implements MemKV {
 				for(Object hkey : map_value.keySet()) {
 					CacheObject co = (CacheObject) map_value.get(hkey);
 					long expireTime = co.getExpireTime();
-					if(expireTime != -1 && expireTime < System.currentTimeMillis()) {
+					if(expireTime != -1 && (expireTime + 500) < System.currentTimeMillis()) {
 						map_value.remove(hkey);
-						logger.info("DefaultMemKV of name "+ getName() + " gc: remove hkey " + key + ":" + hkey);;
+						//logger.info("DefaultMemKV of name "+ getName() + " gc: remove hkey " + key + ":" + hkey);;
 					}
 				}
 				if(map_value.size() == 0) {
@@ -497,6 +500,9 @@ public class DefaultMemKV implements MemKV {
 				
 				
 			}
+		}
+		} catch (Exception e) {
+			logger.error("gc error",e);
 		}
 		logger.info("DefaultMemKV of name " + getName() + " end gc...,consume " + (System.currentTimeMillis()-start) + "ms");
 	}
@@ -507,7 +513,8 @@ public class DefaultMemKV implements MemKV {
 	private boolean checkGC() {
 		//检查当前缓存个数，包含过期的和未过期的
 		int size = cacheMap.size();
-		//统计占用的空间大小		
+		//统计占用的空间大小
+		
 		//获取系统的内存大小
 		return false;
 	}	
@@ -709,6 +716,26 @@ public class DefaultMemKV implements MemKV {
 		logger.info(ret);
 		return ret;
 
+	}
+	@Override
+	public boolean containsKey(String key) {
+		// TODO Auto-generated method stub
+		return cacheMap.containsKey(key);
+	}
+	@Override
+	public boolean hcontainsKey(String key) {
+		// TODO Auto-generated method stub
+		return cacheMap.containsKey(key);
+	}
+	@Override
+	public boolean hcontainsKey(String key, String hkey) {
+		// TODO Auto-generated method stub
+		Object map = cacheMap.get(key);
+		if(map == null ||!( map instanceof Map)) {
+			return false;
+		}
+		Map m = (Map) map;
+		return m.containsKey(hkey);
 	}
 
 }

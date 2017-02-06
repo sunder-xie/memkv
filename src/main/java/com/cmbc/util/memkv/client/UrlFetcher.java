@@ -5,4 +5,5 @@ import java.util.List;
 public interface UrlFetcher {
 
 	public List<String> fetchUrls();
+	
 }

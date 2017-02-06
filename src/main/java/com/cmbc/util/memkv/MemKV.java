@@ -81,5 +81,9 @@ public interface MemKV {
 	public boolean hremove(String key);
 	public boolean hremove(String key,String hkey);
 	
+	public boolean containsKey(String key);
+	public boolean hcontainsKey(String key);
+	public boolean hcontainsKey(String key, String hkey);
+	
 	public String cacheDump();
 }

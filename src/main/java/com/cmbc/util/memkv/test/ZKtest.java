@@ -26,8 +26,8 @@ public class ZKtest {
 		
 		MemkvZKListener listener = new MemkvZKListener("172.16.59.129", 2181, "");
 		listener.start();
-		MemKV memkv = new DefaultMemKV("memory1",false);
-		MemKV memkv1= new DefaultMemKV("memory2",false);
+		MemKV memkv = new DefaultMemKV("memory1");
+		MemKV memkv1= new DefaultMemKV("memory2");
 		MemKV rm = new RedisMemKV("redis","172.16.59.129", 6379, 100, 200);
 		rm.set("jjj", "jfkdkkd", 10);
 		rm.hset("111111", "1", "jjj", 10);

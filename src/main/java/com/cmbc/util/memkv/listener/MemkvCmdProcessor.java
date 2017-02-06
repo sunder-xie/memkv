@@ -42,10 +42,16 @@ public class MemkvCmdProcessor {
 				return "ERROR:key can't be empty for cmd invalid";
 			}
 			boolean ret = memkv.remove(key);
+			
 			if(ret) {
 				return "SUCCESS:invalid key " + key + " success";
 			} else {
+				ret = memkv.hremove(key);
+				if(ret) {
+					return "SUCCESS:invalid key " + key + " success";
+				}
 				return "FAILED:the value of key " + key + " is null, please confirm";
+				
 			}
 			
 		} else if(cmd.equals("hinvalid")) {
