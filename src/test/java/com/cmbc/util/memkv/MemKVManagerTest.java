@@ -25,6 +25,6 @@ public class MemKVManagerTest extends TestCase {
 		JmxMonitor monitor = new JmxMonitor("app");
 		monitor.init();
 		fuck.set("1", "2", 3);
-		Thread.sleep(100000);
+		//Thread.sleep(100000);
 	}
 }

@@ -60,6 +60,21 @@ public class CacheObject implements Serializable{
 		this.expireTime = expireTime;
 	}
 	private Object value;
+	private Object oldValue;
+	private boolean dirtyFlag;
+	
+	public Object getOldValue() {
+		return oldValue;
+	}
+	public void setOldValue(Object oldValue) {
+		this.oldValue = oldValue;
+	}
+	public boolean isDirtyFlag() {
+		return dirtyFlag;
+	}
+	public void setDirtyFlag(boolean dirtyFlag) {
+		this.dirtyFlag = dirtyFlag;
+	}
 	private long putTime;
 	private long updateTime;
 	private long lastAccessTime;

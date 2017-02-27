@@ -17,4 +17,5 @@ public interface MemkvMonitorMBean {
 	public Object hinvalid(String name,String key);
 	public Date expireTime(String name,String key);
 	public Date expireTime(String name,String key,String hkey);
+	public String addEvent(String memory,String key, String hkey, int eventType);
 }

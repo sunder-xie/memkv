@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.cmbc.util.memkv.common.NamedThreadFactory;
+import com.cmbc.util.memkv.event.MemkvEventDispatcher;
+import com.cmbc.util.memkv.event.MemkvEventType;
 import com.cmbc.util.memkv.serialize.DefaultSerializeUtil;
 import com.cmbc.util.memkv.serialize.ISerialize;
 
@@ -53,6 +55,7 @@ public class DefaultMemKV implements MemKV {
 		this.name = name;
 		MemKVManager.getInstance().register(name, this);
 	}
+	
 	public DefaultMemKV(String name,boolean enableGC) {
 		serializeUtil = new DefaultSerializeUtil();
 		this.name = name;
@@ -86,6 +89,7 @@ public class DefaultMemKV implements MemKV {
 		long expireTime = (expireSeconds <= 0) ? -1 : currentTime+expireSeconds*1000;
 		CacheObject co = new CacheObject(bytes,expireTime);
 		cacheMap.put(key, co);
+		MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.ADD, true);
 		return true;
 	}
 
@@ -98,6 +102,7 @@ public class DefaultMemKV implements MemKV {
 		long currentTime = System.currentTimeMillis();
 		long expireTime = (expireSeconds <= 0) ? -1 : currentTime+expireSeconds*1000;
 		CacheObject co = (CacheObject) cacheMap.get(key);
+		
 		if(co == null || (co.getExpireTime() != -1 && co.getExpireTime() < currentTime)) {
 			synchronized (this) {
 				co = (CacheObject) cacheMap.get(key);
@@ -105,6 +110,7 @@ public class DefaultMemKV implements MemKV {
 					byte[] bytes = serializeUtil.serialize(object);
 					co = new CacheObject(bytes,expireTime);
 					cacheMap.put(key, co);
+					MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.ADD, true);
 					return true;
 				}
 			}
@@ -143,6 +149,8 @@ public class DefaultMemKV implements MemKV {
 				}
 			}
 		}
+		
+		MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.ADD, true);
 		byte[] bytes = serializeUtil.serialize(object);
 		CacheObject co = new CacheObject(bytes, expireTime);
 		map.put(hkey, co);
@@ -173,6 +181,7 @@ public class DefaultMemKV implements MemKV {
 					byte[] bytes = serializeUtil.serialize(object);
 					co = new CacheObject(bytes,expireTime);
 					map.put(hkey, co);
+					MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.ADD, true);
 					return true;
 				}
 			}
@@ -211,6 +220,7 @@ public class DefaultMemKV implements MemKV {
 		long expireTime = (expireSeconds <= 0) ? -1 : currentTime+expireSeconds*1000;
 		CacheObject co = new CacheObject(object,expireTime);
 		cacheMap.put(key, co);
+		MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.ADD, false);
 		return true;
 	}
 
@@ -231,6 +241,7 @@ public class DefaultMemKV implements MemKV {
 		}
 		CacheObject co = new CacheObject(object, expireTime);
 		map.put(hkey, co);
+		MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.ADD, false);
 		return true;
 	}
 
@@ -252,7 +263,39 @@ public class DefaultMemKV implements MemKV {
 	@Override
 	public boolean remove(String key) {
 		// TODO Auto-generated method stub
-		return cacheMap.remove(key)==null? false:true;
+		Object object = cacheMap.get(key);
+		if(object == null) {
+			MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.REMOVE, true);
+			return false;
+		}
+		if(object instanceof Map) {
+			Map<String,CacheObject> map = (Map<String,CacheObject>)object;
+			for(String k : map.keySet()) {
+				CacheObject co = map.get(k);
+				try {
+					if(!co.isDirtyFlag()) { //不允许使用脏数据
+						map.remove(k);
+					} else { //允许使用脏数据,可能这个还没超时，这时get还是可以拿到的，故意设成超时
+						co.setExpireTime(System.currentTimeMillis()-1000);//
+					}
+				} catch(Exception e) {
+					
+					logger.error(e.getMessage());
+				}
+				
+				MemkvEventDispatcher.addEvent(name, key, k, "Default", MemkvEventType.REMOVE, true);
+			}
+				
+			return true;
+		}
+		CacheObject co = (CacheObject)object;
+		if(! co.isDirtyFlag()) {		
+			cacheMap.remove(key);
+			MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.REMOVE, true);
+		} else {
+			co.setExpireTime(System.currentTimeMillis()-1000);//可能这个还没超时，故意把它弄成超时,
+		}
+		return true;
 	}
 
 	@Override
@@ -260,10 +303,18 @@ public class DefaultMemKV implements MemKV {
 		// TODO Auto-generated method stub
 		Map map = (Map) cacheMap.get(key);
 		if(map == null) {
+			MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.REMOVE, true);
 			return false;
 		}
-		return map.remove(hkey)==null? false:true;
+		CacheObject co = (CacheObject) map.get(hkey);
+		if(!co.isDirtyFlag()) {	
+			map.remove(hkey);
+		} else {
+			co.setExpireTime(System.currentTimeMillis()-1000);
+		}
+		MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.REMOVE, true);
 		
+		return true;		
 	}
 
 	
@@ -479,10 +530,13 @@ public class DefaultMemKV implements MemKV {
 		for(Object key : cacheMap.keySet()) {
 			Object value = cacheMap.get(key);
 			if(value instanceof CacheObject) {
-				long expireTime = ((CacheObject) value).getExpireTime();
+				CacheObject co = (CacheObject)value;
+				long expireTime = co.getExpireTime();
 				if(expireTime != -1 && (expireTime + 500) < System.currentTimeMillis()) {
 					//logger.info("DefaultMemKV of name "+ getName() + " gc: remove key " + key);;
-					cacheMap.remove(key);
+					if(!co.isDirtyFlag()) {
+						cacheMap.remove(key);
+					}
 				}
 			} else if(value instanceof ConcurrentHashMap) {
 				ConcurrentHashMap map_value = (ConcurrentHashMap)value;
@@ -490,7 +544,9 @@ public class DefaultMemKV implements MemKV {
 					CacheObject co = (CacheObject) map_value.get(hkey);
 					long expireTime = co.getExpireTime();
 					if(expireTime != -1 && (expireTime + 500) < System.currentTimeMillis()) {
-						map_value.remove(hkey);
+						if(!co.isDirtyFlag()) {
+							map_value.remove(hkey);
+						}
 						//logger.info("DefaultMemKV of name "+ getName() + " gc: remove hkey " + key + ":" + hkey);;
 					}
 				}
@@ -527,7 +583,26 @@ public class DefaultMemKV implements MemKV {
 	@Override
 	public boolean hremove(String key) {
 		// TODO Auto-generated method stub
-		return cacheMap.remove(key)==null?false:true;
+		Object object = cacheMap.get(key);
+		if(object == null || !(object instanceof Map)) {
+			return false;
+		}
+		Map<String,CacheObject> map = (Map<String,CacheObject>)object;
+		for(String k : map.keySet()) {
+			CacheObject co = map.get(k);
+			try {
+				if(!co.isDirtyFlag()) {
+					map.remove(k);
+				} else {
+					co.setExpireTime(System.currentTimeMillis()-1000);
+				}
+			} catch(Exception e) {
+				
+				logger.error(e.getMessage());
+			}
+			MemkvEventDispatcher.addEvent(name, key, k, "Default", MemkvEventType.REMOVE, true);
+		}
+		return true;
 	}
 
 	/**
@@ -549,6 +624,7 @@ public class DefaultMemKV implements MemKV {
 				if(co == null || co.getExpireTime() < currentTime) {
 					co = new CacheObject(object,expireTime);
 					cacheMap.put(key, co);
+					MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.ADD, false);
 					return true;
 				}
 			}
@@ -586,6 +662,7 @@ public class DefaultMemKV implements MemKV {
 					
 					co = new CacheObject(object,expireTime);
 					map.put(hkey, co);
+					MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.ADD, false);
 					return true;
 				}
 			}
@@ -736,6 +813,171 @@ public class DefaultMemKV implements MemKV {
 		}
 		Map m = (Map) map;
 		return m.containsKey(hkey);
+	}
+	@Override
+	public boolean set(String key, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return set(key,object,expireSeconds);
+		}
+		byte[] bytes = serializeUtil.serialize(object);
+		long currentTime = System.currentTimeMillis();
+		long expireTime = (expireSeconds <= 0) ? -1 : currentTime+expireSeconds*1000;
+		CacheObject co = new CacheObject(bytes,expireTime);
+		co.setDirtyFlag(true);
+		cacheMap.put(key, co);
+		//添加新增事件
+		MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.ADD, true);
+		return true;
+	}
+	
+	@Override
+	public Object get(String key, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return get(key);
+		}
+		CacheObject co = (CacheObject) cacheMap.get(key);
+		if(co == null) {
+			return null;
+		}	
+		return serializeUtil.unserialize((byte[]) co.getValue());
+	}
+	
+	@Override
+	public boolean hset(String key, String hkey, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return hset(key,hkey,object,expireSeconds);
+		}
+		long currentTime = System.currentTimeMillis();
+		long expireTime = expireSeconds <0 ? -1 : currentTime + expireSeconds*1000;
+		Map<String,CacheObject> map = (Map) cacheMap.get(key);
+		if(map == null) {
+			synchronized (this) {
+				map = (Map<String, CacheObject>) cacheMap.get(key);
+				if(map == null) {
+					map = new ConcurrentHashMap<String,CacheObject>();
+					cacheMap.put(key, map);
+				}
+			}
+		}
+		byte[] bytes = serializeUtil.serialize(object);
+		CacheObject co = new CacheObject(bytes, expireTime);
+		co.setDirtyFlag(true);
+		map.put(hkey, co);
+		//添加新增事件
+		MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.ADD, true);
+		return true;
+	}
+	@Override
+	public Object hget(String key, String hkey, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return hget(key,hkey);
+		}
+		Object o = cacheMap.get(key);
+		if(o == null) {
+			return null;
+		}
+		if(! (o instanceof Map)) {
+			throw new RuntimeException();
+		}
+		Map map = (Map)o;
+		
+		CacheObject co = (CacheObject) map.get(hkey);
+		if(co == null) {
+			return null;
+		}
+		return serializeUtil.unserialize((byte[]) co.getValue());
+
+	}
+	@Override
+	public boolean unsafe_set(String key, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return unsafe_set(key,object,expireSeconds);
+		}
+		long currentTime = System.currentTimeMillis();
+		long expireTime = (expireSeconds <= 0) ? -1 : currentTime+expireSeconds*1000;
+		CacheObject co = new CacheObject(object,expireTime);
+		co.setDirtyFlag(true);
+		cacheMap.put(key, co);
+		//添加新增事件
+		MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.ADD, false);
+		return true;
+	}
+	@Override
+	public boolean unsafe_hset(String key, String hkey, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return unsafe_hset(key,hkey,object,expireSeconds);
+		}
+		long currentTime = System.currentTimeMillis();
+		long expireTime = expireSeconds <0 ? -1 : currentTime + expireSeconds*1000;
+		Map<String,CacheObject> map = (Map) cacheMap.get(key);
+		if(map == null) {
+			synchronized (this) {
+				map = (Map<String, CacheObject>) cacheMap.get(key);
+				if(map == null) {
+					map = new ConcurrentHashMap<String,CacheObject>();
+					cacheMap.put(key, map);
+				}
+			}
+		}
+		CacheObject co = new CacheObject(object, expireTime);
+		co.setDirtyFlag(true);
+		map.put(hkey, co);
+		
+		//添加新增事件
+		MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.ADD, false);
+		return true;
+	}
+	@Override
+	public Object unsafe_get(String key, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return unsafe_get(key);
+		} 
+		CacheObject co = (CacheObject) cacheMap.get(key);
+		if(co == null) {
+			return null;
+		}
+		long currentTime = System.currentTimeMillis();
+		co.setLastAccessTime(currentTime);
+//		if(currentTime >  co.getExpireTime() && co.getExpireTime() != -1) {
+//			//添加访问时已过期事件
+//			MemkvEventDispatcher.addEvent(name, key, null, "Default", MemkvEventType.EXPIRE_ON_ACCESS, false);
+//			return co.getValue();
+//		}
+		return co.getValue();
+		
+	}
+	@Override
+	public Object unsafe_hget(String key, String hkey, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		if(!allowDirty) {
+			return unsafe_hget(key,hkey);
+		}
+		Object o = cacheMap.get(key);
+		if(o == null) {
+			return null;
+		}
+		if(! (o instanceof Map)) {
+			throw new RuntimeException();
+		}
+		Map map = (Map)o;
+		
+		CacheObject co = (CacheObject) map.get(hkey);
+		if(co == null) {
+			return null;
+		}
+//		if(co.getExpireTime() != -1 && co.getExpireTime() < System.currentTimeMillis()) {
+//			//添加访问时已过期事件
+//			MemkvEventDispatcher.addEvent(name, key, hkey, "Default", MemkvEventType.EXPIRE_ON_ACCESS, false);
+//			return co.getValue();
+//		}
+		return co.getValue();
 	}
 
 }

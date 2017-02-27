@@ -25,7 +25,13 @@ import javax.management.remote.JMXServiceURL;
 public class JmxTools {
 
 
-
+	private JmxUrlFetcher urlfetcher;
+	
+	public void sendEvent(String memkvname,String key, String hkey, int eventType) {
+		
+	}
+	
+	
 	public static void main(String[] args) throws IOException, MalformedObjectNameException, InstanceNotFoundException, IntrospectionException, ReflectionException {
 		
 		
@@ -129,5 +135,15 @@ public class JmxTools {
 		}
 		System.out.println(result);	
 		
+	}
+
+
+	public JmxUrlFetcher getUrlfetcher() {
+		return urlfetcher;
+	}
+
+
+	public void setUrlfetcher(JmxUrlFetcher urlfetcher) {
+		this.urlfetcher = urlfetcher;
 	}
 }

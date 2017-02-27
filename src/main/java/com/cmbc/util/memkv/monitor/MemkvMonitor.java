@@ -8,6 +8,7 @@ import com.cmbc.util.memkv.CacheObject;
 import com.cmbc.util.memkv.DefaultMemKV;
 import com.cmbc.util.memkv.MemKV;
 import com.cmbc.util.memkv.MemKVManager;
+import com.cmbc.util.memkv.event.MemkvEventDispatcher;
 
 public class MemkvMonitor implements MemkvMonitorMBean {
 
@@ -23,6 +24,8 @@ public class MemkvMonitor implements MemkvMonitorMBean {
 		return result;
 	}
 
+
+	
 	@Override
 	public String stat(String name) {
 		// TODO Auto-generated method stub
@@ -164,6 +167,15 @@ public class MemkvMonitor implements MemkvMonitorMBean {
 		} else {
 			return "not DefaultMemKV";
 		}
+	}
+
+
+
+	@Override
+	public String addEvent(String memory, String key, String hkey, int eventType) {
+		// TODO Auto-generated method stub
+		MemkvEventDispatcher.addEvent(memory, key, hkey, "Default", eventType, false);
+		return "success";
 	}
 
 

@@ -234,6 +234,46 @@ public class RedisMemKV implements MemKV {
 		// TODO Auto-generated method stub
 		return false;
 	}
+	@Override
+	public boolean set(String key, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public Object get(String key, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public boolean hset(String key, String hkey, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public Object hget(String key, String hkey, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public boolean unsafe_set(String key, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public boolean unsafe_hset(String key, String hkey, Object object, long expireSeconds, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+	@Override
+	public Object unsafe_get(String key, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	@Override
+	public Object unsafe_hget(String key, String hkey, boolean allowDirty) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 }
 
