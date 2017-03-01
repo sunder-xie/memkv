@@ -841,6 +841,9 @@ public class DefaultMemKV implements MemKV {
 		if(co == null) {
 			return null;
 		}	
+		if(!co.isDirtyFlag()) {
+			return get(key);
+		}
 		return serializeUtil.unserialize((byte[]) co.getValue());
 	}
 	
@@ -888,6 +891,9 @@ public class DefaultMemKV implements MemKV {
 		CacheObject co = (CacheObject) map.get(hkey);
 		if(co == null) {
 			return null;
+		}
+		if(!co.isDirtyFlag()) {
+			return hget(key,hkey);
 		}
 		return serializeUtil.unserialize((byte[]) co.getValue());
 
@@ -943,6 +949,9 @@ public class DefaultMemKV implements MemKV {
 		if(co == null) {
 			return null;
 		}
+		if(!co.isDirtyFlag()) {
+			return unsafe_get(key);
+		}
 		long currentTime = System.currentTimeMillis();
 		co.setLastAccessTime(currentTime);
 //		if(currentTime >  co.getExpireTime() && co.getExpireTime() != -1) {
@@ -971,6 +980,9 @@ public class DefaultMemKV implements MemKV {
 		CacheObject co = (CacheObject) map.get(hkey);
 		if(co == null) {
 			return null;
+		}
+		if(!co.isDirtyFlag()) {
+			return unsafe_hget(key,hkey);
 		}
 //		if(co.getExpireTime() != -1 && co.getExpireTime() < System.currentTimeMillis()) {
 //			//添加访问时已过期事件

@@ -61,7 +61,7 @@ public class CacheObject implements Serializable{
 	}
 	private Object value;
 	private Object oldValue;
-	private boolean dirtyFlag;
+	private boolean dirtyFlag = false;
 	
 	public Object getOldValue() {
 		return oldValue;
