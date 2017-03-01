@@ -62,7 +62,7 @@ public class TestDirty extends TestCase {
 		String bbb = (String) memkv.unsafe_get("aaa");
 		Assert.assertTrue(bbb.equals("bbb"));
 		try {
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -130,5 +130,85 @@ public class TestDirty extends TestCase {
 		Assert.assertTrue(bbb.equals("ccc"));
 	
 		
+	}
+	public void testhset1() {
+		MemKV memkv = new DefaultMemKV();
+		memkv.hset("aaa", "bbb","ccc", 1);
+		String bbb = (String) memkv.hget("aaa","bbb");
+		Assert.assertTrue(bbb.equals("ccc"));
+		try {
+			Thread.sleep(1005);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		bbb = (String) memkv.hget("aaa","bbb");
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.hget("aaa", "bbb",true);
+		Assert.assertTrue(bbb == null);		
+		memkv.hset("aaa", "bbb", "ccc",10);
+		memkv.hremove("aaa","bbb");
+		bbb = (String) memkv.hget("aaa","bbb");
+		//System.out.println(bbb);
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.hget("aaa","bbb", true);
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.hget("aaa","bbb", false);
+		Assert.assertTrue(bbb == null);
+		
+	}
+	public void testunsafehset1() {
+		MemKV memkv = new DefaultMemKV();
+		memkv.unsafe_hset("aaa", "bbb","ccc", 1);
+		String bbb = (String) memkv.unsafe_hget("aaa","bbb");
+		Assert.assertTrue(bbb.equals("ccc"));
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		bbb = (String) memkv.unsafe_hget("aaa","bbb");
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.unsafe_hget("aaa", "bbb",true);
+		Assert.assertTrue(bbb == null);		
+		memkv.hset("aaa", "bbb", "ccc",10);
+		memkv.hremove("aaa","bbb");
+		bbb = (String) memkv.unsafe_hget("aaa","bbb");
+		//System.out.println(bbb);
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.unsafe_hget("aaa","bbb", true);
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.unsafe_hget("aaa","bbb", false);
+		Assert.assertTrue(bbb == null);
+		
+	}
+	public void testunsafehset2() {
+		MemKV memkv = new DefaultMemKV();
+		memkv.unsafe_hset("aaa", "bbb","ccc", 1,true);
+		String bbb = (String) memkv.unsafe_hget("aaa","bbb");
+		Assert.assertTrue(bbb.equals("ccc"));
+		try {
+			Thread.sleep(1050);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		bbb = (String) memkv.unsafe_hget("aaa","bbb");
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.unsafe_hget("aaa", "bbb",true);
+		Assert.assertTrue(bbb.equals("ccc"));		
+		memkv.unsafe_hset("aaa", "bbb", "ccc",10,true);
+		memkv.hremove("aaa","bbb");
+		bbb = (String) memkv.unsafe_hget("aaa","bbb");
+		//System.out.println(bbb);
+		Assert.assertTrue(bbb == null);
+		bbb = (String) memkv.unsafe_hget("aaa","bbb", true);
+		Assert.assertTrue(bbb.equals("ccc"));
+		bbb = (String) memkv.unsafe_hget("aaa","bbb", false);
+		Assert.assertTrue(bbb == null);
 	}
 }
