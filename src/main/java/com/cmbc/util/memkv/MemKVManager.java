@@ -7,6 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cmbc.util.memkv.event.MemkvEventDispatcher;
+import com.cmbc.util.memkv.event.MemkvEventHandler;
+
 public class MemKVManager {
 
 	private static Logger logger = LoggerFactory.getLogger(MemKVManager.class);
@@ -60,6 +63,16 @@ public class MemKVManager {
 	public static MemKVManager getInstance() {
 		return instance;
 	}
+	public static void destroy() {
+		MemKVManager ins = MemKVManager.getInstance();
+		for(String name : ins.managerMap.keySet()) {
+			MemKV mkv = ins.managerMap.get(name);
+			if(mkv instanceof DefaultMemKV) {
+				((DefaultMemKV)mkv).destroy();
+			}
+		}
+		MemkvEventDispatcher.destroy();
+	}
 	public boolean register(String name,MemKV memkv) {
 		
 		MemKV value =  managerMap.putIfAbsent(name, memkv);
@@ -84,5 +97,27 @@ public class MemKVManager {
 		}
 		return names;
 	}
-	
+	/**
+	 * 添加一个事件的handler
+	 * @param memkvName
+	 * @param key
+	 * @param hkey
+	 * @param handler
+	 * @param eventType
+	 * @return
+	 */
+	public static boolean addHandler(String memkvName,String key,String hkey, MemkvEventHandler handler,int eventType) {
+		return MemkvEventDispatcher.addHandler(memkvName, key, hkey, handler, eventType);
+	}
+	/**
+	 * 添加一个事件
+	 * @param memkvName
+	 * @param key
+	 * @param hkey
+	 * @param type
+	 * @return
+	 */
+	public static boolean addEvent(String memkvName,String key,String hkey,int type) {
+		return MemkvEventDispatcher.addEvent(memkvName, key, hkey, "Default", type,true);
+	}
 }

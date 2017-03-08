@@ -59,8 +59,9 @@ public class MemkvEventDispatcher {
 	
 	public static void destroy() {
 		stop = true;
-		dispatcher.shutdown();
-		consumerThreadPool.shutdown();
+		dispatcher.shutdownNow();
+		//dispatcher.shutdown();
+		consumerThreadPool.shutdownNow();
 	}
 	public MemkvEventDispatcher() {
 		// TODO Auto-generated constructor stub

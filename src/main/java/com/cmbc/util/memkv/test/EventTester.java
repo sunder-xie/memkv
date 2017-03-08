@@ -2,10 +2,12 @@ package com.cmbc.util.memkv.test;
 
 import com.cmbc.util.memkv.DefaultMemKV;
 import com.cmbc.util.memkv.MemKV;
+import com.cmbc.util.memkv.MemKVManager;
 import com.cmbc.util.memkv.event.MemkvEvent;
 import com.cmbc.util.memkv.event.MemkvEventDispatcher;
 import com.cmbc.util.memkv.event.MemkvEventHandler;
 import com.cmbc.util.memkv.event.MemkvEventType;
+import com.cmbc.util.memkv.monitor.JmxMonitor;
 
 public class EventTester {
 
@@ -38,7 +40,23 @@ public class EventTester {
 		memkv.set("wocao", "jjj", 30);
 		MemkvEventDispatcher.addEvent("memory", "fuck1", null, "Default", MemkvEventType.SELF_DEFINE1, true);
 		
+		JmxMonitor mo = new JmxMonitor("fuck");
+		mo.init();
+		MemKV memkv1 = new DefaultMemKV("wocao", true,10);
 		
+		try {
+			Thread.sleep(20000);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		MemKVManager.destroy();
+		try {
+			Thread.sleep(1000000);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 

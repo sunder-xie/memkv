@@ -37,8 +37,12 @@ public class DefaultMemKV implements MemKV {
 	private String name;
 	ScheduledExecutorService executor;
 	public void destroy() {
-		if(executor != null) {
-			executor.shutdown();
+		if(executor != null && ! executor.isShutdown()) {
+			try {
+				executor.shutdownNow();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+			}
 		}
 	}
 	public DefaultMemKV() {
