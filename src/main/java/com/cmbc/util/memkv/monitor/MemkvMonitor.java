@@ -179,4 +179,12 @@ public class MemkvMonitor implements MemkvMonitorMBean {
 	}
 
 
+
+	@Override
+	public String addEvent(String memory, String key, int eventType) {
+		MemkvEventDispatcher.addEvent(memory, key, null, "Default", eventType, false);
+		return "success";
+	}
+
+
 }
