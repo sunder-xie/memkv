@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -994,6 +995,22 @@ public class DefaultMemKV implements MemKV {
 //			return co.getValue();
 //		}
 		return co.getValue();
+	}
+	
+	public void randomVictim() {
+		int size = cacheMap.size();
+		Random rand = new Random(System.nanoTime());
+		int vic = rand.nextInt(size/2);
+		//System.out.println(vic);
+		int i = 0;
+		for(String key : cacheMap.keySet()) {
+			if(i == vic) {
+				cacheMap.remove(key);
+				//System.out.println(key+" removed");
+				break;
+			}
+			i++;
+		}
 	}
 
 }

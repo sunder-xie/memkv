@@ -67,11 +67,19 @@ public class MemKVManager {
 		MemKVManager ins = MemKVManager.getInstance();
 		for(String name : ins.managerMap.keySet()) {
 			MemKV mkv = ins.managerMap.get(name);
-			if(mkv instanceof DefaultMemKV) {
-				((DefaultMemKV)mkv).destroy();
+			try {
+				if(mkv instanceof DefaultMemKV) {
+					((DefaultMemKV)mkv).destroy();
+				}
+			} catch(Exception e) {
+				logger.error(e.getMessage(),e);
 			}
 		}
-		MemkvEventDispatcher.destroy();
+		try {
+			MemkvEventDispatcher.destroy();
+		} catch(Exception e) {
+			logger.error(e.getMessage(),e);
+		}
 	}
 	public boolean register(String name,MemKV memkv) {
 		

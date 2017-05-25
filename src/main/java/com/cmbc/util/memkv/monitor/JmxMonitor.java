@@ -15,6 +15,8 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.cmbc.util.memkv.MemKVManager;
+
 public class JmxMonitor {
 
 	private String appName;
@@ -71,6 +73,12 @@ public class JmxMonitor {
 		}   
 	}
 	public void destroy() {
+		
+			try {
+				MemKVManager.destroy();
+			} catch(Exception e) {
+				logger.error(e.getMessage());
+			}
 	       MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();   
 	        
 	        // 新建MBean ObjectName, 在MBeanServer里标识注册的MBean   
